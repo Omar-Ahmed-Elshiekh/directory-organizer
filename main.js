@@ -34,8 +34,6 @@ function run(args) {
   mapDirectoryContentTypes(targetDir, files, folders);
 
   for (const file of files) {
-    if (file.name === "main.js" || file.name === "package.json"|| file.name === "README.md") continue;
-
     try {
       const targetFolder =
         getTargetFolder(file.name, folderToFileMap) ?? "others";
