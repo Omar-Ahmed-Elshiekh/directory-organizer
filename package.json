@@ -1,0 +1,16 @@
+{
+  "name": "folder-organizer",
+  "version": "1.0.0",
+  "description": "A CLI tool to organize files by type",
+  "main": "main.js",
+  "bin": {
+    "organize": "./main.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type":"module",
+  "keywords": ["cli", "files", "organizer"],
+  "author": "Omar A. Elshiekh",
+  "license": "MIT"
+}
