@@ -1,4 +1,4 @@
-# File Organizer CLI
+# Directory Organizer CLI
 
 A simple and safe Node.js CLI tool that organizes files into folders based on their file types.
 
@@ -36,7 +36,7 @@ It automatically creates folders (like `images`, `documents/pdfs`, `videos`, etc
 ### Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/file-organizer.git
+git clone https://github.com/Omar-Ahmed-Elshiekh/directory-organizer.git
 cd file-organizer
 npm install
 ```
