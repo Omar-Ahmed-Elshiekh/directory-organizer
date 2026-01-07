@@ -37,7 +37,7 @@ It automatically creates folders (like `images`, `documents/pdfs`, `videos`, etc
 
 ```bash
 git clone https://github.com/Omar-Ahmed-Elshiekh/directory-organizer.git
-cd file-organizer
+cd directory-organizer
 npm install
 ```
 
