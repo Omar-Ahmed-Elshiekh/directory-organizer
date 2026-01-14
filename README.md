@@ -73,7 +73,7 @@ node main.js ./Downloads -d
 
 ## Customize Directory Structure "Optional"
 
-You can customize how files are organized by editing an `organizer-config.json` file in the same directory as the script.
+You can customize how files are organized by editing `organizer-config.json` file in the same directory as the script.
 
 ### Configuration Format
 
