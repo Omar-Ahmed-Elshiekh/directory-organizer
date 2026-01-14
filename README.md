@@ -71,6 +71,61 @@ node main.js ./Downloads -d
 
 ---
 
+## Customize Directory Structure (Optional)
+
+You can customize how files are organized by creating an `organizer-config.json` file in the same directory as the script.
+
+### Configuration Format
+
+Map directory names to file extensions:
+```json
+{
+  "images": [".jpg", ".png", ".gif"],
+  "videos": [".mp4", ".mov"],
+  "code": [".js", ".py", ".java"]
+}
+```
+
+### Nested Directories
+
+Create subdirectories for better organization:
+```json
+{
+  "documents": {
+    "pdfs": [".pdf"],
+    "word": [".doc", ".docx"],
+    "spreadsheets": [".xlsx", ".csv"]
+  },
+  "media": {
+    "photos": [".jpg", ".png"],
+    "videos": [".mp4", ".avi"]
+  }
+}
+```
+
+### Example Configuration
+```json
+{
+  "images": [".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif"],
+  "videos": [".mp4", ".mkv", ".avi", ".mov"],
+  "code": {
+    "javascript": [".js", ".jsx", ".ts", ".tsx"],
+    "python": [".py"],
+    "web": [".html", ".css"]
+  },
+  "others": []
+}
+```
+
+### Notes
+
+- Extensions must include the dot (e.g., `.jpg` not `jpg`)
+- Extensions are case-insensitive
+- Files with unmatched extensions go to the `others` folder
+- If the config file has errors, you'll be prompted to use the default configuration or exit
+
+---
+
 ## Global CLI Usage (`organize`) "Optional"
 
 You can install this tool as a global command so you can run it as `organize`
