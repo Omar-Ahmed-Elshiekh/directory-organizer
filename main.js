@@ -1,13 +1,18 @@
 #!/usr/bin/env node
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
+import readline from "readline";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
 
-run(args);
+await run(args);
 
-function run(args) {
-  const folderToFileMap = {
+async function run(args) {
+  const defaultFolderToFileMap = {
     images: [".jpg", ".jpeg", ".png", ".webp", ".psd", ".svg", ".gif"],
     videos: [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm"],
     audios: [".mp3", ".wav"],
@@ -24,24 +29,23 @@ function run(args) {
     others: [], //maybe add some structure to others folder too
   };
 
+  const folderToFileMap = await loadConfig(defaultFolderToFileMap);
   const targetDir = args.find((arg) => !arg.startsWith("-")) || process.cwd();
   const dryRun = args.includes("--dry-run") || args.includes("-d");
 
-  const folders = [];
-  const files = [];
+  await makeFolders(folderToFileMap, targetDir, dryRun);
 
-  makeFolders(folderToFileMap, targetDir, dryRun);
-  mapDirectoryContentTypes(targetDir, files, folders);
+  //optional feature: add folders organizing options
+  const { files, folders } = await mapDirectoryContentTypes(targetDir);
 
   for (const file of files) {
     try {
-      const targetFolder =
-        getTargetFolder(file.name, folderToFileMap) ?? "others";
+      const targetFolder = getTargetFolder(file.name, folderToFileMap) ?? "others";
       const fullDestinationPath = path.join(targetDir, targetFolder);
-      const safeFilePath = getSafeFilePath(fullDestinationPath, file.name);
+      const safeFilePath = await getSafeFilePath(fullDestinationPath, file.name);
 
       if (!dryRun) {
-        fs.renameSync(path.join(targetDir, file.name), safeFilePath);
+        await fs.rename(path.join(targetDir, file.name), safeFilePath);
         console.log(`Moved: ${file.name} -> ${targetFolder}`);
       } else {
         console.log(`Would move: ${file.name} -> ${targetFolder}`);
@@ -52,31 +56,81 @@ function run(args) {
   }
 }
 
-function makeFolders(obj, baseDir, dryRun = false) {
-  if (dryRun) return;
-  for (const key in obj) {
-    const dirPath = path.join(baseDir, key);
+async function loadConfig(defaultConfig) {
+  const configPath = path.join(__dirname, "organizer-config.json");
 
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath);
+  try {
+    const configFile = await fs.readFile(configPath, "utf-8");
+    const customConfig = JSON.parse(configFile);
+    return customConfig;
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      console.log("Using default configuration (no organizer-config.json found)");
+      return defaultConfig;
+    } else if (err instanceof SyntaxError) {
+      console.error("Error parsing organizer-config.json");
+      console.error("  Invalid JSON:", err.message);
+    } else {
+      console.error("Error reading config file");
     }
 
-    if (
-      typeof obj[key] === "object" &&
-      !Array.isArray(obj[key]) &&
-      obj[key] !== null
-    ) {
-      makeFolders(obj[key], dirPath);
+    const shouldContinue = await promptUser(
+      "Do you want to continue with the default configuration? (y/n): "
+    );
+
+    if (shouldContinue) {
+      console.log("Continuing with default configuration");
+      return defaultConfig;
+    } else {
+      console.log("Exiting program");
+      process.exit(0);
     }
   }
 }
 
-function mapDirectoryContentTypes(dir, files, folders) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+async function promptUser(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === "y" || normalized === "yes");
+    });
+  });
+}
+
+async function makeFolders(obj, baseDir, dryRun = false) {
+  if (dryRun) return;
+  for (const key in obj) {
+    const dirPath = path.join(baseDir, key);
+
+    try {
+      await fs.mkdir(dirPath);
+    } catch {
+      continue;
+    }
+
+    if (typeof obj[key] === "object" && !Array.isArray(obj[key]) && obj[key] !== null) {
+      await makeFolders(obj[key], dirPath);
+    }
+  }
+}
+
+async function mapDirectoryContentTypes(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+
+  const files = [];
+  const folders = [];
 
   entries.forEach((entry) => {
     entry.isFile() ? files.push(entry) : folders.push(entry);
   });
+
+  return { files, folders };
 }
 
 function getTargetFolder(filename, map) {
@@ -96,24 +150,26 @@ function getTargetFolder(filename, map) {
   return null;
 }
 
-function getSafeFilePath(dir, filename) {
-  const fileInfo = path.parse(filename);
-  let name = fileInfo.name;
-  let ext = fileInfo.ext;
+async function getSafeFilePath(dir, filename) {
+  const { name, ext } = path.parse(filename);
 
+  let baseName = name;
   let counter = 1;
   let finalFilePath = path.join(dir, filename);
 
-  while (fs.existsSync(finalFilePath)) {
-    const match = name.match(/^(.+) \((\d+)\)$/);
-    if (match) {
-      name = match[1];
-      counter = parseInt(match[2]) + 1;
-    }
-
-    finalFilePath = path.join(dir, `${name} (${counter})${ext}`);
-    counter++;
+  const match = name.match(/^(.+) \((\d+)\)$/);
+  if (match) {
+    baseName = match[1];
+    counter = parseInt(match[2]) + 1;
   }
 
-  return finalFilePath;
+  while (true) {
+    try {
+      await fs.access(finalFilePath);
+      finalFilePath = path.join(dir, `${baseName} (${counter})${ext}`);
+      counter++;
+    } catch {
+      return finalFilePath;
+    }
+  }
 }

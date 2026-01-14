@@ -1,0 +1,16 @@
+{
+  "images": [".jpg", ".jpeg", ".png", ".webp", ".psd", ".svg", ".gif"],
+  "videos": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm"],
+  "audios": [".mp3", ".wav"],
+  "documents": {
+    "pdfs": [".pdf"],
+    "docs": [".doc", ".docx", ".odt"],
+    "sheets": [".csv", ".xlsx", ".ods"],
+    "powerpoints": [".ppt", ".pptx"]
+  },
+  "apps": [".exe", ".msi", ".deb", ".rpm"],
+  "texts": [".txt", ".md", ".json", ".xml", ".yaml", ".yml", ".log"],
+  "compressed": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"],
+  "fonts": [".ttf", ".otf", ".woff", ".woff2"],
+  "others": []
+}
